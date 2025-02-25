@@ -45,4 +45,5 @@ async def check_tweets():
             last_tweets[username] = tweet_link
             await channel.send(f"New tweet from @{username}: {tweet_link}")
 
-client.run(TOKEN)
+if __name__ == "__main__":
+    client.run(TOKEN)
