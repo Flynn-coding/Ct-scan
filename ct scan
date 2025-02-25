@@ -1,0 +1,44 @@
+import discord
+import feedparser
+import asyncio
+from discord.ext import tasks
+
+# BOT CONFIGURATION
+TOKEN = "MTM0Mzc1NzUyODkyNzgzMDAyNg.GXbWIn.TyG3EGUyFl24fNP5jlUKJxtE6ZMV5wbOt74x-Y"
+CHANNEL_ID = 1343377957636280493  
+TWITTER_USERNAMES = ["elonmusk", "MarioNawfal", "WhatcherGuru", "DailyMailCeleb", "Nuotrix", "PFTrenches", "TrumpDailyPosts", "meme1coins", "phantom", "orangiecoins", "solana", "bincance", "CryptoXEmperor", "BoredElonMusk", "Cobratate", "BillGates", "realDonaldTrump"]  
+
+# RSSHub URL (Used to bypass Twitter API limits)
+RSS_URL = "https://rsshub.app/twitter/user/{}"
+
+intents = discord.Intents.default()
+client = discord.Client(intents=intents)
+
+@client.event
+async def on_ready():
+    print(f'Logged in as {client.user}')
+    check_tweets.start()
+
+# Store last seen tweet links
+last_tweets = {}
+
+@tasks.loop(seconds=5)
+async def check_tweets():
+    channel = client.get_channel(CHANNEL_ID)
+    if channel is None:
+        print("Channel not found!")
+        return
+
+    for username in TWITTER_USERNAMES:
+        feed = feedparser.parse(RSS_URL.format(username))
+        if not feed.entries:
+            continue
+
+        latest_tweet = feed.entries[0]
+        tweet_link = latest_tweet.link
+
+        if username not in last_tweets or last_tweets[username] != tweet_link:
+            last_tweets[username] = tweet_link
+            await channel.send(f"New tweet from @{username}: {tweet_link}")
+
+client.run(TOKEN)
